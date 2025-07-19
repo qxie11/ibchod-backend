@@ -52,7 +52,7 @@ export class SmartphoneService {
       delete where.price;
     }
 
-    const [items, total] = await Promise.all([
+    const [rawItems, total] = await Promise.all([
       this.prisma.smartphone.findMany({
         where,
         skip,
@@ -61,6 +61,19 @@ export class SmartphoneService {
       }),
       this.prisma.smartphone.count({ where }),
     ]);
+
+    const baseUrl = process.env.BASE_URL?.replace(/\/$/, '') || '';
+    const items = rawItems.map((item) => ({
+      ...item,
+      gallery: Array.isArray(item.gallery)
+        ? item.gallery.map((url: string) =>
+            url.startsWith('http')
+              ? url
+              : baseUrl + (url.startsWith('/') ? url : '/' + url),
+          )
+        : [],
+    }));
+
     return { items, total, skip };
   }
 
