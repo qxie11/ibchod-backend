@@ -4,9 +4,10 @@ import { AppService } from './app.service';
 import { SmartphoneModule } from './smartphone/smartphone.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { APP_PIPE } from '@nestjs/core';
+import { OrderModule } from './order/order.module';
 
 @Module({
-  imports: [SmartphoneModule, PrismaModule],
+  imports: [SmartphoneModule, PrismaModule, OrderModule],
   controllers: [AppController],
   providers: [
     AppService,
