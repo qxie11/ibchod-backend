@@ -11,7 +11,7 @@ import {
 import { SmartphoneService } from './smartphone.service';
 import { CreateSmartphoneDto } from './create-smartphone.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { CloudinaryService } from '@/common/cloudinary/cloudinary.service';
+import { CloudinaryService } from '../common/cloudinary/cloudinary.service';
 import { memoryStorage } from 'multer';
 
 @Controller('smartphones')
