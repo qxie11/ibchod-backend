@@ -6,16 +6,20 @@ import {
   Body,
   UploadedFiles,
   UseInterceptors,
+  ValidationPipe,
 } from '@nestjs/common';
 import { SmartphoneService } from './smartphone.service';
 import { CreateSmartphoneDto } from './create-smartphone.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { CloudinaryService } from '@/common/cloudinary/cloudinary.service';
+import { memoryStorage } from 'multer';
 
 @Controller('smartphones')
 export class SmartphoneController {
-  constructor(private readonly smartphoneService: SmartphoneService) {}
+  constructor(
+    private readonly smartphoneService: SmartphoneService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Get()
   async findAll(
@@ -41,24 +45,26 @@ export class SmartphoneController {
   @Post()
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'gallery', maxCount: 10 }], {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, uniqueSuffix + extname(file.originalname));
-        },
-      }),
+      storage: memoryStorage(),
     }),
   )
   async create(
-    @Body() createSmartphoneDto: CreateSmartphoneDto,
+    @Body(new ValidationPipe()) createSmartphoneDto: CreateSmartphoneDto,
     @UploadedFiles() files: { gallery?: Express.Multer.File[] },
   ) {
-    const galleryPaths = files.gallery?.map((file) => file.path) || [];
+    const galleryFiles = files.gallery || [];
+
+    const uploadResults = await Promise.all(
+      galleryFiles.map((file) =>
+        this.cloudinaryService.uploadImage(file.buffer),
+      ),
+    );
+
+    const galleryUrls = uploadResults.map((res) => res.secure_url);
+
     return this.smartphoneService.create({
       ...createSmartphoneDto,
-      gallery: galleryPaths,
+      gallery: galleryUrls,
     });
   }
 }
