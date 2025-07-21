@@ -6,14 +6,23 @@ import { CreateOrderDto } from './create-order.dto';
 export class OrderService {
   private prisma = new PrismaClient();
 
-  create(dto: CreateOrderDto) {
+  async create(dto: CreateOrderDto) {
+    const items = await Promise.all(
+      dto.items.map(async (item) => {
+        const smartphone = await this.prisma.smartphone.findUnique({
+          where: { id: item.smartphoneId },
+        });
+        return { smartphone, quantity: item.quantity };
+      }),
+    );
+
     return this.prisma.order.create({
       data: {
         email: dto.email,
         phone: dto.phone,
         name: dto.name,
         message: dto.message,
-        items: dto.items as unknown as object,
+        items: [items as unknown as object],
       },
     });
   }
