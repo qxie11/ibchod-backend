@@ -7,6 +7,7 @@ import {
   UploadedFiles,
   UseInterceptors,
   ValidationPipe,
+  Param,
 } from '@nestjs/common';
 import { SmartphoneService } from './smartphone.service';
 import { CreateSmartphoneDto } from './create-smartphone.dto';
@@ -30,6 +31,7 @@ export class SmartphoneController {
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
     @Query('search') search?: string,
+    @Query('name') name?: string,
   ) {
     return this.smartphoneService.findAll({
       skip: skip ? Number(skip) : undefined,
@@ -39,7 +41,18 @@ export class SmartphoneController {
       minPrice: minPrice ? Number(minPrice) : undefined,
       maxPrice: maxPrice ? Number(maxPrice) : undefined,
       search,
+      name,
     });
+  }
+
+  @Get('slug/:slug')
+  async getBySlug(@Param('slug') slug: string) {
+    return this.smartphoneService.getBySlug(slug);
+  }
+
+  @Get('filters')
+  async getFilters() {
+    return this.smartphoneService.getFilters();
   }
 
   @Post()

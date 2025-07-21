@@ -14,6 +14,7 @@ export class SmartphoneService {
     minPrice?: number;
     maxPrice?: number;
     search?: string;
+    name?: string;
   }) {
     const {
       skip = 0,
@@ -23,6 +24,7 @@ export class SmartphoneService {
       minPrice,
       maxPrice,
       search,
+      name,
     } = params;
 
     const where: any = {
@@ -32,12 +34,21 @@ export class SmartphoneService {
         gte: minPrice && +minPrice,
         lte: maxPrice && maxPrice,
       },
-      ...(search && {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' } },
-          { slug: { contains: search, mode: 'insensitive' } },
-        ],
-      }),
+      ...(name && { name: { contains: name, mode: 'insensitive' } }),
+      ...(search &&
+        (() => {
+          const terms = search.trim().split(/\s+/);
+          return {
+            AND: terms.map((term) => ({
+              OR: [
+                { name: { contains: term, mode: 'insensitive' } },
+                { slug: { contains: term, mode: 'insensitive' } },
+                { color: { contains: term, mode: 'insensitive' } },
+                { capacity: isNaN(Number(term)) ? undefined : Number(term) },
+              ].filter(Boolean),
+            })),
+          };
+        })()),
     };
 
     // Удаляем undefined фильтры
@@ -87,5 +98,35 @@ export class SmartphoneService {
     return this.prisma.smartphone.create({
       data: dto,
     });
+  }
+
+  async getBySlug(slug: string) {
+    return this.prisma.smartphone.findUnique({ where: { slug } });
+  }
+
+  async getFilters() {
+    const [min, max, names, colors, capacities] = await Promise.all([
+      this.prisma.smartphone.aggregate({ _min: { price: true } }),
+      this.prisma.smartphone.aggregate({ _max: { price: true } }),
+      this.prisma.smartphone.findMany({
+        select: { name: true },
+        distinct: ['name'],
+      }),
+      this.prisma.smartphone.findMany({
+        select: { color: true },
+        distinct: ['color'],
+      }),
+      this.prisma.smartphone.findMany({
+        select: { capacity: true },
+        distinct: ['capacity'],
+      }),
+    ]);
+    return {
+      minPrice: min._min.price,
+      maxPrice: max._max.price,
+      names: names.map((n) => n.name),
+      colors: colors.map((c) => c.color),
+      capacities: capacities.map((c) => c.capacity),
+    };
   }
 }
