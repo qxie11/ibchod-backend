@@ -9,34 +9,42 @@ import {
   IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 
 class OrderItemDto {
+  @ApiProperty()
   @IsInt()
   smartphoneId!: number;
 
+  @ApiProperty()
   @IsInt()
   @Min(1)
   quantity!: number;
 }
 
 export class CreateOrderDto {
+  @ApiProperty()
   @IsEmail()
   email!: string;
 
   @IsString()
   @IsNotEmpty()
+  @ApiProperty()
   phone!: string;
 
   @IsString()
   @IsNotEmpty()
+  @ApiProperty()
   name!: string;
 
   @IsString()
   @IsOptional()
+  @ApiProperty()
   message!: string;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
+  @ApiProperty()
   items!: OrderItemDto[];
 }

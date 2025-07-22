@@ -9,29 +9,34 @@ import {
 } from 'class-validator';
 import { IsFile } from '../common/decorators/is-file.decorator';
 import { Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateSmartphoneDto {
   @IsString()
   @IsNotEmpty()
+  @ApiProperty()
   name!: string;
 
   @IsString()
   @IsNotEmpty()
-  // slug должен быть уникальным
+  @ApiProperty()
   slug!: string;
 
   @IsString()
   @IsNotEmpty()
+  @ApiProperty()
   color!: string;
 
   @Type(() => Number)
   @IsNumber()
   @Min(64)
+  @ApiProperty()
   capacity!: number;
 
   @Type(() => Number)
   @IsNumber()
   @Min(0)
+  @ApiProperty()
   price!: number;
 
   @IsArray()
@@ -42,5 +47,6 @@ export class CreateSmartphoneDto {
     { mime: ['image/jpg', 'image/png', 'image/jpeg', 'image/webp'] },
     { message: 'Each file in gallery must be a valid image' },
   )
+  @ApiProperty()
   gallery?: any;
 }
