@@ -129,4 +129,23 @@ export class SmartphoneService {
       capacities: capacities.map((c) => c.capacity),
     };
   }
+
+  async getRelatedSmartphones(slug: string) {
+    const smartphone = await this.prisma.smartphone.findUnique({
+      where: { slug },
+    });
+    if (!smartphone) {
+      throw new Error('Smartphone not found');
+    }
+    const related = await this.prisma.smartphone.findMany({
+      where: {
+        slug: { not: slug },
+        OR: [{ name: smartphone.name }, { capacity: smartphone.capacity }],
+      },
+      take: 10,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return related;
+  }
 }

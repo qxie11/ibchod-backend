@@ -50,6 +50,11 @@ export class SmartphoneController {
     return this.smartphoneService.getBySlug(slug);
   }
 
+  @Get('related-smartphones/:slug')
+  async getRelatedSmartphones(@Param('slug') slug: string) {
+    return await this.smartphoneService.getRelatedSmartphones(slug);
+  }
+
   @Get('filters')
   async getFilters() {
     return this.smartphoneService.getFilters();
