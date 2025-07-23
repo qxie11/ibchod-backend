@@ -37,6 +37,22 @@ export class CreateOrderDto {
   @ApiProperty()
   name!: string;
 
+  @IsOptional()
+  @ApiProperty({ required: false })
+  id?: number;
+
+  @IsOptional()
+  @ApiProperty({ required: false })
+  checked?: boolean;
+
+  @IsOptional()
+  @ApiProperty({ required: false })
+  createdAt?: Date;
+
+  @IsOptional()
+  @ApiProperty({ required: false })
+  updatedAt?: Date;
+
   @IsString()
   @IsOptional()
   @ApiProperty()

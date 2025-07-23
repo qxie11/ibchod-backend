@@ -47,6 +47,32 @@ export class CreateSmartphoneDto {
     { mime: ['image/jpg', 'image/png', 'image/jpeg', 'image/webp'] },
     { message: 'Each file in gallery must be a valid image' },
   )
-  @ApiProperty()
+  @ApiProperty({ required: false })
   gallery?: any;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  large_desc?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  small_desc?: string;
+
+  @IsOptional()
+  @ApiProperty({ required: false })
+  active?: boolean;
+
+  @IsOptional()
+  @ApiProperty({ required: false })
+  id?: number;
+
+  @IsOptional()
+  @ApiProperty({ required: false })
+  createdAt?: Date;
+
+  @IsOptional()
+  @ApiProperty({ required: false })
+  updatedAt?: Date;
 }
