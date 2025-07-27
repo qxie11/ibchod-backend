@@ -8,6 +8,7 @@ import {
   UseInterceptors,
   ValidationPipe,
   Param,
+  Put,
 } from '@nestjs/common';
 import { SmartphoneService } from './smartphone.service';
 import { CreateSmartphoneDto } from './create-smartphone.dto';
@@ -83,6 +84,36 @@ export class SmartphoneController {
     return this.smartphoneService.create({
       ...createSmartphoneDto,
       gallery: galleryUrls,
+    });
+  }
+
+  @Put(':id')
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'gallery', maxCount: 10 }], {
+      storage: memoryStorage(),
+    }),
+  )
+  async update(
+    @Param('id') id: string,
+    @Body(new ValidationPipe()) updateSmartphoneDto: CreateSmartphoneDto,
+    @UploadedFiles() files: { gallery?: Express.Multer.File[] },
+  ) {
+    const galleryFiles = files?.gallery || [];
+
+    let galleryUrls: string[] = [];
+
+    if (galleryFiles.length > 0) {
+      const uploadResults = await Promise.all(
+        galleryFiles.map((file) =>
+          this.cloudinaryService.uploadImage(file.buffer),
+        ),
+      );
+      galleryUrls = uploadResults.map((res) => res.secure_url);
+    }
+
+    return this.smartphoneService.update(Number(id), {
+      ...updateSmartphoneDto,
+      ...(galleryUrls.length > 0 && { gallery: galleryUrls }),
     });
   }
 }

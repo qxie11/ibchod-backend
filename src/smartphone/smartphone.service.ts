@@ -51,7 +51,6 @@ export class SmartphoneService {
         })()),
     };
 
-    // Удаляем undefined фильтры
     Object.keys(where).forEach(
       (key) => where[key] === undefined && delete where[key],
     );
@@ -95,8 +94,13 @@ export class SmartphoneService {
     if (existingSlug) {
       throw new Error('Smartphone with this slug already exists');
     }
+
+    const active = dto.active === 'true';
     return this.prisma.smartphone.create({
-      data: dto,
+      data: {
+        ...dto,
+        active,
+      },
     });
   }
 
@@ -147,5 +151,32 @@ export class SmartphoneService {
     });
 
     return related;
+  }
+
+  async update(id: number, dto: CreateSmartphoneDto) {
+    const existingSmartphone = await this.prisma.smartphone.findUnique({
+      where: { id },
+    });
+    if (!existingSmartphone) {
+      throw new Error('Smartphone not found');
+    }
+
+    if (dto.slug && dto.slug !== existingSmartphone.slug) {
+      const existingSlug = await this.prisma.smartphone.findUnique({
+        where: { slug: dto.slug },
+      });
+      if (existingSlug) {
+        throw new Error('Smartphone with this slug already exists');
+      }
+    }
+
+    const active = dto.active === 'true';
+    return this.prisma.smartphone.update({
+      where: { id },
+      data: {
+        ...dto,
+        active,
+      },
+    });
   }
 }

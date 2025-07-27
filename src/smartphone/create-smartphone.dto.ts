@@ -62,7 +62,7 @@ export class CreateSmartphoneDto {
 
   @IsOptional()
   @ApiProperty({ required: false })
-  active?: boolean;
+  active?: string;
 
   @IsOptional()
   @ApiProperty({ required: false })

@@ -8,6 +8,7 @@ import { OrderModule } from './order/order.module';
 import { CloudinaryModule } from './common/cloudinary/cloudinary.module';
 import { ConfigModule } from '@nestjs/config';
 import { CloudinaryService } from './common/cloudinary/cloudinary.service';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CloudinaryService } from './common/cloudinary/cloudinary.service';
     OrderModule,
     CloudinaryModule,
     ConfigModule.forRoot({ isGlobal: true }),
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [
