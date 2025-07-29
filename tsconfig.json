@@ -2,6 +2,8 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es2017",
+    "allowSyntheticDefaultImports": true,
+   "esModuleInterop": true,
     "lib": ["es2017", "dom"],
     "declaration": true,
     "sourceMap": true,

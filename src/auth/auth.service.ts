@@ -11,8 +11,8 @@ import { hash, verify } from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
-import { isDev } from '@/utils/is-dev.util';
-import { convertToMilliseconds } from '@/utils/convert-to-milliseconds.util';
+import { isDev } from '../utils/is-dev.util';
+import { convertToMilliseconds } from '../utils/convert-to-milliseconds.util';
 
 @Injectable()
 export class AuthService {
