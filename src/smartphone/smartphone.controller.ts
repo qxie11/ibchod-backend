@@ -8,10 +8,11 @@ import {
   UseInterceptors,
   ValidationPipe,
   Param,
-  Put,
+  Patch,
 } from '@nestjs/common';
 import { SmartphoneService } from './smartphone.service';
 import { CreateSmartphoneDto } from './create-smartphone.dto';
+import { UpdateSmartphoneDto } from './update-smartphone.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../common/cloudinary/cloudinary.service';
 import { memoryStorage } from 'multer';
@@ -87,7 +88,7 @@ export class SmartphoneController {
     });
   }
 
-  @Put(':id')
+  @Patch(':id')
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'gallery', maxCount: 10 }], {
       storage: memoryStorage(),
@@ -95,7 +96,14 @@ export class SmartphoneController {
   )
   async update(
     @Param('id') id: string,
-    @Body(new ValidationPipe()) updateSmartphoneDto: CreateSmartphoneDto,
+    @Body(
+      new ValidationPipe({
+        skipMissingProperties: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+      }),
+    )
+    updateSmartphoneDto: UpdateSmartphoneDto,
     @UploadedFiles() files: { gallery?: Express.Multer.File[] },
   ) {
     const galleryFiles = files?.gallery || [];

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateSmartphoneDto } from './create-smartphone.dto';
+import { UpdateSmartphoneDto } from './update-smartphone.dto';
 
 @Injectable()
 export class SmartphoneService {
@@ -153,7 +154,7 @@ export class SmartphoneService {
     return related;
   }
 
-  async update(id: number, dto: CreateSmartphoneDto) {
+  async update(id: number, dto: UpdateSmartphoneDto) {
     const existingSmartphone = await this.prisma.smartphone.findUnique({
       where: { id },
     });
@@ -161,6 +162,7 @@ export class SmartphoneService {
       throw new Error('Smartphone not found');
     }
 
+    // Only check slug conflicts if slug is being updated
     if (dto.slug && dto.slug !== existingSmartphone.slug) {
       const existingSlug = await this.prisma.smartphone.findUnique({
         where: { slug: dto.slug },
@@ -170,13 +172,27 @@ export class SmartphoneService {
       }
     }
 
-    const active = dto.active === 'true';
+    // Prepare update data, only including provided fields
+    const updateData: any = {};
+    
+    // Only include fields that are actually provided
+    if (dto.name !== undefined) updateData.name = dto.name;
+    if (dto.slug !== undefined) updateData.slug = dto.slug;
+    if (dto.color !== undefined) updateData.color = dto.color;
+    if (dto.capacity !== undefined) updateData.capacity = dto.capacity;
+    if (dto.price !== undefined) updateData.price = dto.price;
+    if (dto.gallery !== undefined) updateData.gallery = dto.gallery;
+    if (dto.large_desc !== undefined) updateData.large_desc = dto.large_desc;
+    if (dto.small_desc !== undefined) updateData.small_desc = dto.small_desc;
+    
+    // Handle active field conversion
+    if (dto.active !== undefined) {
+      updateData.active = dto.active === 'true';
+    }
+
     return this.prisma.smartphone.update({
       where: { id },
-      data: {
-        ...dto,
-        active,
-      },
+      data: updateData,
     });
   }
 }
