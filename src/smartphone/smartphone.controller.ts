@@ -9,6 +9,7 @@ import {
   ValidationPipe,
   Param,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { SmartphoneService } from './smartphone.service';
 import { CreateSmartphoneDto } from './create-smartphone.dto';
@@ -123,5 +124,10 @@ export class SmartphoneController {
       ...updateSmartphoneDto,
       ...(galleryUrls.length > 0 && { gallery: galleryUrls }),
     });
+  }
+
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.smartphoneService.delete(Number(id));
   }
 }

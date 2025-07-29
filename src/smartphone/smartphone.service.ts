@@ -174,7 +174,7 @@ export class SmartphoneService {
 
     // Prepare update data, only including provided fields
     const updateData: any = {};
-    
+
     // Only include fields that are actually provided
     if (dto.name !== undefined) updateData.name = dto.name;
     if (dto.slug !== undefined) updateData.slug = dto.slug;
@@ -184,7 +184,7 @@ export class SmartphoneService {
     if (dto.gallery !== undefined) updateData.gallery = dto.gallery;
     if (dto.large_desc !== undefined) updateData.large_desc = dto.large_desc;
     if (dto.small_desc !== undefined) updateData.small_desc = dto.small_desc;
-    
+
     // Handle active field conversion
     if (dto.active !== undefined) {
       updateData.active = dto.active === 'true';
@@ -194,5 +194,24 @@ export class SmartphoneService {
       where: { id },
       data: updateData,
     });
+  }
+
+  async delete(id: number) {
+    const existingSmartphone = await this.prisma.smartphone.findUnique({
+      where: { id },
+    });
+
+    if (!existingSmartphone) {
+      throw new Error('Smartphone not found');
+    }
+
+    await this.prisma.smartphone.delete({
+      where: { id },
+    });
+
+    return {
+      message: 'Smartphone deleted successfully',
+      deletedSmartphone: existingSmartphone,
+    };
   }
 }
