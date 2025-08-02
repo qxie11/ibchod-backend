@@ -22,7 +22,7 @@ export class OrderService {
         phone: dto.phone,
         name: dto.name,
         message: dto.message,
-        items: [items as unknown as object],
+        items: items,
       },
     });
   }
