@@ -11,6 +11,12 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { Response, Request } from 'express';
+import { AuthResponse } from './dto/auth.dto';
+import {
+  ApiBadRequestResponse,
+  ApiConflictResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
@@ -18,6 +24,9 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOkResponse({ type: AuthResponse })
+  @ApiConflictResponse({ description: 'User already exists' })
+  @ApiBadRequestResponse({ description: 'Invalid request' })
   async register(
     @Body() dto: RegisterDto,
     @Res({ passthrough: true }) res: Response,

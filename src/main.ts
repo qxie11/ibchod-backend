@@ -19,6 +19,7 @@ async function bootstrap() {
     .setTitle('IObchod')
     .setDescription('API documentation for smartphone store')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
