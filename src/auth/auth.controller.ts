@@ -4,18 +4,21 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Req,
   Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { Response, Request } from 'express';
+import { RefreshDto } from './dto/refresh.dto';
+import { Response } from 'express';
 import { AuthResponse } from './dto/auth.dto';
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
   ApiOkResponse,
+  ApiOperation,
+  ApiBody,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
 @Controller('auth')
@@ -45,11 +48,18 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Refresh access token using refresh token from body',
+  })
+  @ApiBody({ type: RefreshDto })
+  @ApiOkResponse({ type: AuthResponse })
+  @ApiBadRequestResponse({ description: 'Invalid refresh token' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async refresh(
-    @Req() req: Request,
+    @Body() dto: RefreshDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    return await this.authService.refreshToken(req, res);
+    return await this.authService.refreshTokenFromBody(dto.refreshToken, res);
   }
 
   @Post('logout')

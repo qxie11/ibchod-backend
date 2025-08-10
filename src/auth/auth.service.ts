@@ -10,7 +10,7 @@ import { PrismaClient } from '../../generated/prisma/client';
 import { hash, verify } from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { isDev } from '../utils/is-dev.util';
 import { convertToMilliseconds } from '../utils/convert-to-milliseconds.util';
 
@@ -77,9 +77,7 @@ export class AuthService {
     return this.authenticate(res, user.id);
   }
 
-  async refreshToken(req: Request, res: Response) {
-    const refreshToken = req.cookies['refreshToken'];
-
+  async refreshTokenFromBody(refreshToken: string, res: Response) {
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not found');
     }
@@ -114,6 +112,7 @@ export class AuthService {
 
     return {
       accessToken,
+      refreshToken,
     };
   }
 
