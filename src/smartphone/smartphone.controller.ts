@@ -35,7 +35,7 @@ import {
   FiltersResponse,
 } from './smartphone-response.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { CloudinaryService } from '../common/cloudinary/cloudinary.service';
+import { S3Service } from '../common/s3/s3.service';
 import { memoryStorage } from 'multer';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
@@ -45,7 +45,7 @@ import { UseGuards } from '@nestjs/common';
 export class SmartphoneController {
   constructor(
     private readonly smartphoneService: SmartphoneService,
-    private readonly cloudinaryService: CloudinaryService,
+    private readonly s3Service: S3Service,
   ) {}
 
   @Get()
@@ -154,13 +154,19 @@ export class SmartphoneController {
   ) {
     const galleryFiles = files.gallery || [];
 
-    const uploadResults = await Promise.all(
-      galleryFiles.map((file) =>
-        this.cloudinaryService.uploadImage(file.buffer),
-      ),
-    );
+    const uploadPromises = galleryFiles.map(async (file) => {
+      const key = this.s3Service.generateFileKey(file.originalname, 'smartphones');
+      
+      const fileUrl = await this.s3Service.uploadFile({
+        key,
+        buffer: file.buffer,
+        contentType: file.mimetype,
+      });
 
-    const galleryUrls = uploadResults.map((res) => res.secure_url);
+      return fileUrl;
+    });
+
+    const galleryUrls = await Promise.all(uploadPromises);
 
     return this.smartphoneService.create({
       ...createSmartphoneDto,
@@ -199,15 +205,46 @@ export class SmartphoneController {
   ) {
     const galleryFiles = files?.gallery || [];
 
+    // Get current smartphone to access existing gallery
+    const currentSmartphone = await this.smartphoneService.findById(Number(id));
+    if (!currentSmartphone) {
+      throw new Error('Smartphone not found');
+    }
+
     let galleryUrls: string[] = [];
 
     if (galleryFiles.length > 0) {
-      const uploadResults = await Promise.all(
-        galleryFiles.map((file) =>
-          this.cloudinaryService.uploadImage(file.buffer),
-        ),
-      );
-      galleryUrls = uploadResults.map((res) => res.secure_url);
+      // Upload new images to S3
+      const uploadPromises = galleryFiles.map(async (file) => {
+        const key = this.s3Service.generateFileKey(file.originalname, 'smartphones');
+        
+        const fileUrl = await this.s3Service.uploadFile({
+          key,
+          buffer: file.buffer,
+          contentType: file.mimetype,
+        });
+
+        return fileUrl;
+      });
+      
+      galleryUrls = await Promise.all(uploadPromises);
+
+              // Delete old images from S3 if they exist
+        if (currentSmartphone.gallery && currentSmartphone.gallery.length > 0) {
+          const deletePromises = currentSmartphone.gallery.map(async (imageUrl: string) => {
+            try {
+              // Extract key from S3 URL
+              const url = new URL(imageUrl);
+              const key = url.pathname.substring(1); // Remove leading slash
+              
+              await this.s3Service.deleteFile({ key });
+            } catch (error) {
+              console.warn(`Failed to delete old image: ${imageUrl}`, error);
+            }
+          });
+          
+          await Promise.allSettled(deletePromises);
+        }
     }
 
     return this.smartphoneService.update(Number(id), {
@@ -225,7 +262,32 @@ export class SmartphoneController {
   @ApiNotFoundResponse({ description: 'Smartphone not found' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
-  delete(@Param('id') id: string) {
+  async delete(@Param('id') id: string) {
+    // Get smartphone before deletion to access gallery
+    const smartphone = await this.smartphoneService.findById(Number(id));
+    if (!smartphone) {
+      throw new Error('Smartphone not found');
+    }
+
+    // Delete images from S3 if they exist
+    if (smartphone.gallery && smartphone.gallery.length > 0) {
+      const deletePromises = smartphone.gallery.map(async (imageUrl: string) => {
+        try {
+          // Extract key from S3 URL
+          const url = new URL(imageUrl);
+          const key = url.pathname.substring(1); // Remove leading slash
+          
+          await this.s3Service.deleteFile({ key });
+        } catch (error) {
+          console.warn(`Failed to delete image: ${imageUrl}`, error);
+        }
+      });
+      
+      await Promise.allSettled(deletePromises);
+    }
+
     return this.smartphoneService.delete(Number(id));
   }
+
+
 }

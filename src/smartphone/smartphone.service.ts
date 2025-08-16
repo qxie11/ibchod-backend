@@ -112,6 +112,10 @@ export class SmartphoneService {
     return this.prisma.smartphone.findUnique({ where: { slug } });
   }
 
+  async findById(id: number) {
+    return this.prisma.smartphone.findUnique({ where: { id } });
+  }
+
   async getFilters() {
     const [min, max, names, colors, capacities] = await Promise.all([
       this.prisma.smartphone.aggregate({ _min: { price: true } }),

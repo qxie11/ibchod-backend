@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { APP_PIPE } from '@nestjs/core';
 import { OrderModule } from './order/order.module';
 import { CloudinaryModule } from './common/cloudinary/cloudinary.module';
+import { S3Module } from './common/s3/s3.module';
 import { ConfigModule } from '@nestjs/config';
 import { CloudinaryService } from './common/cloudinary/cloudinary.service';
 import { AuthModule } from './auth/auth.module';
@@ -16,6 +17,7 @@ import { AuthModule } from './auth/auth.module';
     PrismaModule,
     OrderModule,
     CloudinaryModule,
+    S3Module,
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
   ],
