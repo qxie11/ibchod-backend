@@ -16,6 +16,7 @@ export class SmartphoneService {
     maxPrice?: number;
     search?: string;
     name?: string;
+    active?: boolean;
   }) {
     const {
       skip = 0,
@@ -26,9 +27,11 @@ export class SmartphoneService {
       maxPrice,
       search,
       name,
+      active = true,
     } = params;
 
     const where: any = {
+      active,
       color,
       capacity: capacity && +capacity,
       price: {

@@ -90,6 +90,7 @@ export class SmartphoneController {
     @Query('maxPrice') maxPrice?: string,
     @Query('search') search?: string,
     @Query('name') name?: string,
+    @Query('active') active: string = 'true',
   ) {
     return this.smartphoneService.findAll({
       skip: skip ? Number(skip) : undefined,
@@ -100,6 +101,7 @@ export class SmartphoneController {
       maxPrice: maxPrice ? Number(maxPrice) : undefined,
       search,
       name,
+      active: active === 'true',
     });
   }
 
