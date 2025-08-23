@@ -155,8 +155,11 @@ export class SmartphoneController {
     const galleryFiles = files.gallery || [];
 
     const uploadPromises = galleryFiles.map(async (file) => {
-      const key = this.s3Service.generateFileKey(file.originalname, 'smartphones');
-      
+      const key = this.s3Service.generateFileKey(
+        file.originalname,
+        'smartphones',
+      );
+
       const fileUrl = await this.s3Service.uploadFile({
         key,
         buffer: file.buffer,
@@ -216,8 +219,11 @@ export class SmartphoneController {
     if (galleryFiles.length > 0) {
       // Upload new images to S3
       const uploadPromises = galleryFiles.map(async (file) => {
-        const key = this.s3Service.generateFileKey(file.originalname, 'smartphones');
-        
+        const key = this.s3Service.generateFileKey(
+          file.originalname,
+          'smartphones',
+        );
+
         const fileUrl = await this.s3Service.uploadFile({
           key,
           buffer: file.buffer,
@@ -226,25 +232,27 @@ export class SmartphoneController {
 
         return fileUrl;
       });
-      
+
       galleryUrls = await Promise.all(uploadPromises);
 
-              // Delete old images from S3 if they exist
-        if (currentSmartphone.gallery && currentSmartphone.gallery.length > 0) {
-          const deletePromises = currentSmartphone.gallery.map(async (imageUrl: string) => {
+      // Delete old images from S3 if they exist
+      if (currentSmartphone.gallery && currentSmartphone.gallery.length > 0) {
+        const deletePromises = currentSmartphone.gallery.map(
+          async (imageUrl: string) => {
             try {
               // Extract key from S3 URL
               const url = new URL(imageUrl);
               const key = url.pathname.substring(1); // Remove leading slash
-              
+
               await this.s3Service.deleteFile({ key });
             } catch (error) {
               console.warn(`Failed to delete old image: ${imageUrl}`, error);
             }
-          });
-          
-          await Promise.allSettled(deletePromises);
-        }
+          },
+        );
+
+        await Promise.allSettled(deletePromises);
+      }
     }
 
     return this.smartphoneService.update(Number(id), {
@@ -271,23 +279,23 @@ export class SmartphoneController {
 
     // Delete images from S3 if they exist
     if (smartphone.gallery && smartphone.gallery.length > 0) {
-      const deletePromises = smartphone.gallery.map(async (imageUrl: string) => {
-        try {
-          // Extract key from S3 URL
-          const url = new URL(imageUrl);
-          const key = url.pathname.substring(1); // Remove leading slash
-          
-          await this.s3Service.deleteFile({ key });
-        } catch (error) {
-          console.warn(`Failed to delete image: ${imageUrl}`, error);
-        }
-      });
-      
+      const deletePromises = smartphone.gallery.map(
+        async (imageUrl: string) => {
+          try {
+            // Extract key from S3 URL
+            const url = new URL(imageUrl);
+            const key = url.pathname.substring(1); // Remove leading slash
+
+            await this.s3Service.deleteFile({ key });
+          } catch (error) {
+            console.warn(`Failed to delete image: ${imageUrl}`, error);
+          }
+        },
+      );
+
       await Promise.allSettled(deletePromises);
     }
 
     return this.smartphoneService.delete(Number(id));
   }
-
-
 }

@@ -64,4 +64,4 @@ export class FiltersResponse {
 
   @ApiProperty()
   maxPrice!: number;
-} 
+}

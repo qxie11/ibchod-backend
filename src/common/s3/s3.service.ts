@@ -1,6 +1,11 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { S3_CLIENT } from './s3.provider';
 
@@ -74,16 +79,16 @@ export class S3Service {
    * Get a signed URL for file operations
    */
   async getSignedUrl(options: GetSignedUrlOptions): Promise<string> {
-    const { 
-      key, 
-      operation, 
-      expiresIn = 3600, 
+    const {
+      key,
+      operation,
+      expiresIn = 3600,
       bucket = this.defaultBucket,
-      contentType 
+      contentType,
     } = options;
 
     let command;
-    
+
     if (operation === 'get') {
       command = new GetObjectCommand({
         Bucket: bucket,
@@ -106,7 +111,7 @@ export class S3Service {
   getFileUrl(key: string, bucket?: string): string {
     const bucketName = bucket || this.defaultBucket;
     const region = this.configService.get<string>('AWS_REGION', 'us-east-1');
-    
+
     return `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
   }
 
@@ -118,7 +123,7 @@ export class S3Service {
     const randomString = Math.random().toString(36).substring(2, 15);
     const extension = originalName.split('.').pop();
     const fileName = `${timestamp}-${randomString}.${extension}`;
-    
+
     return folder ? `${folder}/${fileName}` : fileName;
   }
 
@@ -126,7 +131,7 @@ export class S3Service {
    * Upload multiple files
    */
   async uploadMultipleFiles(files: UploadFileOptions[]): Promise<string[]> {
-    const uploadPromises = files.map(file => this.uploadFile(file));
+    const uploadPromises = files.map((file) => this.uploadFile(file));
     return Promise.all(uploadPromises);
   }
 
@@ -134,7 +139,7 @@ export class S3Service {
    * Delete multiple files
    */
   async deleteMultipleFiles(files: DeleteFileOptions[]): Promise<void> {
-    const deletePromises = files.map(file => this.deleteFile(file));
+    const deletePromises = files.map((file) => this.deleteFile(file));
     await Promise.all(deletePromises);
   }
 }

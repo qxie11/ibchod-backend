@@ -1,17 +1,23 @@
-import { 
-  Controller, 
-  Post, 
-  Delete, 
-  Get, 
-  Param, 
-  Body, 
-  UseInterceptors, 
+import {
+  Controller,
+  Post,
+  Delete,
+  Get,
+  Param,
+  Body,
+  UseInterceptors,
   UploadedFile,
-  UseGuards 
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
-import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiConsumes,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { S3Service } from './s3.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
@@ -43,7 +49,7 @@ export class S3Controller {
   )
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
     const key = this.s3Service.generateFileKey(file.originalname, 'uploads');
-    
+
     const fileUrl = await this.s3Service.uploadFile({
       key,
       buffer: file.buffer,
@@ -63,7 +69,7 @@ export class S3Controller {
   @ApiBearerAuth()
   async deleteFile(@Param('key') key: string) {
     await this.s3Service.deleteFile({ key });
-    
+
     return {
       message: 'File deleted successfully',
       key,
@@ -97,7 +103,7 @@ export class S3Controller {
   @ApiOperation({ summary: 'Get public URL for file' })
   async getFileUrl(@Param('key') key: string) {
     const url = this.s3Service.getFileUrl(key);
-    
+
     return {
       url,
       key,

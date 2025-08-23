@@ -49,4 +49,4 @@ export class OrderListResponse {
 
   @ApiProperty()
   total!: number;
-} 
+}

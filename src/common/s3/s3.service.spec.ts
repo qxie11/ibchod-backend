@@ -54,6 +54,8 @@ describe('S3Service', () => {
 
   it('should get file URL correctly', () => {
     const url = service.getFileUrl('test/file.jpg');
-    expect(url).toBe('https://test-bucket.s3.eu-north-1.amazonaws.com/test/file.jpg');
+    expect(url).toBe(
+      'https://test-bucket.s3.eu-north-1.amazonaws.com/test/file.jpg',
+    );
   });
 });
