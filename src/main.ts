@@ -45,7 +45,16 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.PORT ?? 4000);
+  // For Vercel serverless, we don't need to listen on a port
+  if (process.env.NODE_ENV !== 'production' || process.env.VERCEL !== '1') {
+    await app.listen(process.env.PORT ?? 4000);
+  }
+
+  return app;
 }
 
-bootstrap();
+// Export for Vercel serverless
+const app = bootstrap();
+
+// Export the handler for Vercel
+export default app;
