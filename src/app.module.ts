@@ -10,6 +10,7 @@ import { S3Module } from './common/s3/s3.module';
 import { ConfigModule } from '@nestjs/config';
 import { CloudinaryService } from './common/cloudinary/cloudinary.service';
 import { AuthModule } from './auth/auth.module';
+import { BlogModule } from './blog/blog.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AuthModule } from './auth/auth.module';
     S3Module,
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
+    BlogModule,
   ],
   controllers: [AppController],
   providers: [
