@@ -20,9 +20,8 @@ export class CreateBlogDto {
   excerpt?: string;
 
   @ApiProperty({ description: 'Теги статьи', type: [String], required: false })
-  @IsArray()
   @IsOptional()
-  tags?: string[];
+  tags?: any;
 
   @ApiProperty({ description: 'Автор статьи', required: false })
   @IsString()
@@ -30,9 +29,8 @@ export class CreateBlogDto {
   author?: string;
 
   @ApiProperty({ description: 'Опубликована ли статья', required: false })
-  @IsBoolean()
   @IsOptional()
-  published?: boolean;
+  published?: any;
 
   @ApiProperty({ description: 'Главное изображение', required: false })
   @IsString()

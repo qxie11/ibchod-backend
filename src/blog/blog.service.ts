@@ -51,17 +51,9 @@ export class BlogService {
       this.prisma.blog.count({ where }),
     ]);
 
-    const baseUrl = process.env.BASE_URL?.replace(/\/$/, '') || '';
     const items = rawItems.map((item) => ({
       ...item,
-      featuredImage: item.featuredImage
-        ? item.featuredImage.startsWith('http')
-          ? item.featuredImage
-          : baseUrl +
-            (item.featuredImage.startsWith('/')
-              ? item.featuredImage
-              : '/' + item.featuredImage)
-        : undefined,
+      featuredImage: item.featuredImage || undefined,
     }));
 
     return { items, total, skip };
@@ -75,17 +67,31 @@ export class BlogService {
       throw new Error('Blog post with this slug already exists');
     }
 
-    const published = dto.published === true;
+    // Transform data from multipart/form-data
+    const published = dto.published === 'true' || dto.published === true;
     const publishedAt = published ? new Date() : null;
 
-    return this.prisma.blog.create({
+    // Handle tags - can be string or array
+    let tags: string[] = [];
+    if (typeof dto.tags === 'string') {
+      tags = dto.tags.split(',').map((tag) => tag.trim());
+    } else if (Array.isArray(dto.tags)) {
+      tags = dto.tags;
+    }
+
+    const blog = await this.prisma.blog.create({
       data: {
         ...dto,
         published,
         publishedAt,
-        tags: dto.tags || [],
+        tags,
       },
     });
+
+    return {
+      ...blog,
+      featuredImage: blog.featuredImage || undefined,
+    };
   }
 
   async getBySlug(slug: string) {
@@ -100,17 +106,9 @@ export class BlogService {
       data: { viewCount: { increment: 1 } },
     });
 
-    const baseUrl = process.env.BASE_URL?.replace(/\/$/, '') || '';
     return {
       ...blog,
-      featuredImage: blog.featuredImage
-        ? blog.featuredImage.startsWith('http')
-          ? blog.featuredImage
-          : baseUrl +
-            (blog.featuredImage.startsWith('/')
-              ? blog.featuredImage
-              : '/' + blog.featuredImage)
-        : undefined,
+      featuredImage: blog.featuredImage || undefined,
     };
   }
 
@@ -167,13 +165,26 @@ export class BlogService {
       }
     }
 
+    // Transform data from multipart/form-data
+    const published = dto.published === 'true' || dto.published === true;
+
     // Handle publishing logic
     let publishedAt = existingBlog.publishedAt;
     if (dto.published !== undefined) {
-      if (dto.published && !existingBlog.published) {
+      if (published && !existingBlog.published) {
         publishedAt = new Date(); // Publish now
-      } else if (!dto.published) {
+      } else if (!published) {
         publishedAt = null; // Unpublish
+      }
+    }
+
+    // Handle tags - can be string or array
+    let tags: string[] | undefined;
+    if (dto.tags !== undefined) {
+      if (typeof dto.tags === 'string') {
+        tags = dto.tags.split(',').map((tag) => tag.trim());
+      } else if (Array.isArray(dto.tags)) {
+        tags = dto.tags;
       }
     }
 
@@ -183,15 +194,20 @@ export class BlogService {
     if (dto.slug !== undefined) updateData.slug = dto.slug;
     if (dto.content !== undefined) updateData.content = dto.content;
     if (dto.excerpt !== undefined) updateData.excerpt = dto.excerpt;
-    if (dto.tags !== undefined) updateData.tags = dto.tags;
+    if (tags !== undefined) updateData.tags = tags;
     if (dto.author !== undefined) updateData.author = dto.author;
-    if (dto.published !== undefined) updateData.published = dto.published;
+    if (dto.published !== undefined) updateData.published = published;
     if (publishedAt !== undefined) updateData.publishedAt = publishedAt;
 
-    return this.prisma.blog.update({
+    const blog = await this.prisma.blog.update({
       where: { id },
       data: updateData,
     });
+
+    return {
+      ...blog,
+      featuredImage: blog.featuredImage || undefined,
+    };
   }
 
   async delete(id: number) {
