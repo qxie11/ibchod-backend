@@ -57,8 +57,13 @@ export class S3Service {
       ContentType: contentType,
     });
 
-    await this.s3Client.send(command);
-    return this.getFileUrl(key, bucket);
+    try {
+      await this.s3Client.send(command);
+      return this.getFileUrl(key);
+    } catch (error) {
+      console.error('S3 upload error:', error);
+      throw error;
+    }
   }
 
   /**
@@ -72,7 +77,12 @@ export class S3Service {
       Key: key,
     });
 
-    await this.s3Client.send(command);
+    try {
+      await this.s3Client.send(command);
+    } catch (error) {
+      console.error('S3 delete error:', error);
+      throw error;
+    }
   }
 
   /**
@@ -110,7 +120,7 @@ export class S3Service {
    */
   getFileUrl(key: string, bucket?: string): string {
     const bucketName = bucket || this.defaultBucket;
-    const region = this.configService.get<string>('AWS_REGION', 'us-east-1');
+    const region = this.configService.get<string>('AWS_REGION', 'eu-north-1');
 
     return `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
   }

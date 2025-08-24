@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateSmartphoneDto } from './create-smartphone.dto';
 import { UpdateSmartphoneDto } from './update-smartphone.dto';
+import { S3Service } from '../common/s3/s3.service';
 
 @Injectable()
 export class SmartphoneService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly s3Service: S3Service,
+  ) {}
 
   async findAll(params: {
     skip?: number;
@@ -179,6 +183,14 @@ export class SmartphoneService {
       }
     }
 
+    // If gallery is being updated, delete old images from S3
+    if (
+      dto.gallery !== undefined &&
+      dto.gallery !== existingSmartphone.gallery
+    ) {
+      await this.deleteImagesFromS3(existingSmartphone.gallery || []);
+    }
+
     // Prepare update data, only including provided fields
     const updateData: any = {};
 
@@ -203,6 +215,29 @@ export class SmartphoneService {
     });
   }
 
+  /**
+   * Delete images from S3
+   */
+  private async deleteImagesFromS3(imageUrls: string[]): Promise<void> {
+    if (!imageUrls || imageUrls.length === 0) return;
+
+    const deletePromises = imageUrls.map(async (imageUrl: string) => {
+      try {
+        // Extract key from S3 URL
+        const url = new URL(imageUrl);
+        // Remove leading slash and get the path after the domain
+        const key = url.pathname.substring(1);
+
+        await this.s3Service.deleteFile({ key });
+        console.log(`Successfully deleted image from S3: ${key}`);
+      } catch (error) {
+        console.warn(`Failed to delete image from S3: ${imageUrl}`, error);
+      }
+    });
+
+    await Promise.allSettled(deletePromises);
+  }
+
   async delete(id: number) {
     const existingSmartphone = await this.prisma.smartphone.findUnique({
       where: { id },
@@ -212,6 +247,10 @@ export class SmartphoneService {
       throw new Error('Smartphone not found');
     }
 
+    // Delete images from S3 if they exist
+    await this.deleteImagesFromS3(existingSmartphone.gallery || []);
+
+    // Delete the smartphone from database
     await this.prisma.smartphone.delete({
       where: { id },
     });

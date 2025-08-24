@@ -9,17 +9,19 @@ export const S3Provider: Provider = {
   useFactory: (configService: ConfigService) => {
     const accessKeyId = configService.get<string>('AWS_ACCESS_KEY');
     const secretAccessKey = configService.get<string>('AWS_SECRET_ACCESS_KEY');
+    const region = configService.get<string>('AWS_REGION', 'eu-north-1');
 
     if (!accessKeyId || !secretAccessKey) {
       throw new Error('AWS credentials are not configured');
     }
 
     return new S3Client({
-      region: configService.get<string>('AWS_REGION', 'eu-north-1'),
+      region,
       credentials: {
         accessKeyId,
         secretAccessKey,
       },
+      // Let AWS SDK automatically determine the correct endpoint
     });
   },
   inject: [ConfigService],
