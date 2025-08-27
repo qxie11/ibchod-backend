@@ -47,13 +47,28 @@ export class BlogService {
         skip,
         take,
         orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          content: true,
+          excerpt: true,
+          featuredImage: true,
+          tags: true,
+          author: true,
+          published: true,
+          publishedAt: true,
+          viewCount: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       }),
       this.prisma.blog.count({ where }),
     ]);
 
     const items = rawItems.map((item) => ({
       ...item,
-      featuredImage: item.featuredImage || undefined,
+      featuredImage: item.featuredImage ?? null,
     }));
 
     return { items, total, skip };
@@ -82,6 +97,7 @@ export class BlogService {
     const blog = await this.prisma.blog.create({
       data: {
         ...dto,
+        featuredImage: dto.featuredImage ?? null,
         published,
         publishedAt,
         tags,
@@ -90,12 +106,29 @@ export class BlogService {
 
     return {
       ...blog,
-      featuredImage: blog.featuredImage || undefined,
+      featuredImage: blog.featuredImage ?? null,
     };
   }
 
   async getBySlug(slug: string) {
-    const blog = await this.prisma.blog.findUnique({ where: { slug } });
+    const blog = await this.prisma.blog.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        content: true,
+        excerpt: true,
+        featuredImage: true,
+        tags: true,
+        author: true,
+        published: true,
+        publishedAt: true,
+        viewCount: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
     if (!blog) {
       throw new Error('Blog post not found');
     }
@@ -108,28 +141,76 @@ export class BlogService {
 
     return {
       ...blog,
-      featuredImage: blog.featuredImage || undefined,
+      featuredImage: blog.featuredImage ?? null,
     };
   }
 
   async findById(id: number) {
-    return this.prisma.blog.findUnique({ where: { id } });
+    const blog = await this.prisma.blog.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        content: true,
+        excerpt: true,
+        featuredImage: true,
+        tags: true,
+        author: true,
+        published: true,
+        publishedAt: true,
+        viewCount: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    if (!blog) return null;
+
+    return {
+      ...blog,
+      featuredImage: blog.featuredImage ?? null,
+    };
   }
 
   async getPopularPosts(limit: number = 5) {
-    return this.prisma.blog.findMany({
+    const blogs = await this.prisma.blog.findMany({
       where: { published: true },
       orderBy: { viewCount: 'desc' },
       take: limit,
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        content: true,
+        excerpt: true,
+        featuredImage: true,
+        tags: true,
+        author: true,
+        published: true,
+        publishedAt: true,
+        viewCount: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
+
+    return blogs.map((blog) => ({
+      ...blog,
+      featuredImage: blog.featuredImage ?? null,
+    }));
   }
 
   async getRecentPosts(limit: number = 5) {
-    return this.prisma.blog.findMany({
+    const blogs = await this.prisma.blog.findMany({
       where: { published: true },
       orderBy: { publishedAt: 'desc' },
       take: limit,
     });
+
+    return blogs.map((blog) => ({
+      ...blog,
+      featuredImage: blog.featuredImage ?? null,
+    }));
   }
 
   async getTags() {
@@ -194,6 +275,8 @@ export class BlogService {
     if (dto.slug !== undefined) updateData.slug = dto.slug;
     if (dto.content !== undefined) updateData.content = dto.content;
     if (dto.excerpt !== undefined) updateData.excerpt = dto.excerpt;
+    if (dto.featuredImage !== undefined)
+      updateData.featuredImage = dto.featuredImage;
     if (tags !== undefined) updateData.tags = tags;
     if (dto.author !== undefined) updateData.author = dto.author;
     if (dto.published !== undefined) updateData.published = published;
@@ -206,7 +289,7 @@ export class BlogService {
 
     return {
       ...blog,
-      featuredImage: blog.featuredImage || undefined,
+      featuredImage: blog.featuredImage ?? null,
     };
   }
 
