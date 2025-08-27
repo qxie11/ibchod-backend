@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '../../generated/prisma/client';
 import { CreateOrderDto } from './create-order.dto';
+import { EmailService, OrderEmailData } from '../common/email/email.service';
 
 @Injectable()
 export class OrderService {
   private prisma = new PrismaClient();
+
+  constructor(private readonly emailService: EmailService) {}
 
   async create(dto: CreateOrderDto) {
     const items = await Promise.all(
@@ -16,7 +19,7 @@ export class OrderService {
       }),
     );
 
-    return this.prisma.order.create({
+    const order = await this.prisma.order.create({
       data: {
         email: dto.email,
         phone: dto.phone,
@@ -25,6 +28,48 @@ export class OrderService {
         items: items,
       },
     });
+
+    // Calculate total amount
+    const totalAmount = items.reduce(
+      (sum, item) => sum + (item.smartphone?.price || 0) * item.quantity,
+      0,
+    );
+
+    // Prepare email data
+    const emailData: OrderEmailData = {
+      orderId: order.id,
+      customerName: dto.name,
+      customerEmail: dto.email,
+      customerPhone: dto.phone,
+      message: dto.message,
+      items: items.map((item) => ({
+        smartphone: {
+          name: item.smartphone?.name || 'Unknown',
+          price: item.smartphone?.price || 0,
+          capacity: item.smartphone?.capacity || 0,
+          color: item.smartphone?.color || 'Unknown',
+        },
+        quantity: item.quantity,
+      })),
+      totalAmount,
+    };
+
+    // Send email notifications
+    try {
+      // Send notification to admin
+      await this.emailService.sendOrderNotification(emailData);
+      
+      // Send confirmation to customer
+      await this.emailService.sendOrderConfirmation(emailData);
+      
+      console.log(`Email notifications sent for order #${order.id}`);
+    } catch (error) {
+      console.error('Failed to send email notifications:', error);
+      // Don't throw error to avoid breaking the order creation
+      // The order is still created successfully
+    }
+
+    return order;
   }
 
   findAll() {

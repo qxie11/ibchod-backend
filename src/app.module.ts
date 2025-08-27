@@ -11,6 +11,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CloudinaryService } from './common/cloudinary/cloudinary.service';
 import { AuthModule } from './auth/auth.module';
 import { BlogModule } from './blog/blog.module';
+import { EmailModule } from './common/email/email.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { BlogModule } from './blog/blog.module';
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     BlogModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [
